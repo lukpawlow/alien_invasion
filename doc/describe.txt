@@ -1,0 +1,11 @@
+W grze Inwazja obcych, gracz kontroluje statek kosmiczny wyświetlany na dole ekranu.
+Gracz może poruszać statkiem w lewą i prawą stronę za pomocą klawiszy kursora
+oraz strzelać, używając spacji.
+Po rozpoczęciu rozgrywki na ekranie pojawia się flota obcych, którzy poruszają
+się wzdłuż ekranu oraz w kierunku statku kosmicznego gracza.
+Zadaniem gracza jest zestrzeliwanie obcych.
+Kiedy grający uniecestwi wszystkich obcych, na ekranie pojawi się nowa flota
+przeciwników, którzy poruszają się szybciej niż wcześniej.
+Gdy którykolwiek obcy zetknie się ze statkiem kosmicznym lub dotrze do dolnej
+krawędzi ekranu, gracz traci jeden statek kosmiczny.
+Jeżeli straci trzy statki kosmiczne, rozgrywka zostaje zakończona.

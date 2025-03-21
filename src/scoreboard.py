@@ -53,7 +53,7 @@ class Scoreboard:
         self.level_image = self.font.render(
             level_str, True, self.text_color, None)
 
-        # Numer poziomu jest wyświetlany pod aktualną punktacją                                       
+        # Numer poziomu jest wyświetlany pod aktualną punktacją
         self.level_rect = self.level_image.get_rect()
         self.level_rect.right = self.score_rect.right
         self.level_rect.top = self.score_rect.bottom + 10
@@ -73,7 +73,18 @@ class Scoreboard:
         self.screen.blit(self.high_score_image, self.high_score_rect)
         self.screen.blit(self.level_image, self.level_rect)
         self.ships.draw(self.screen)
-        
+
+    def prep_timer(self):
+        """Konwersja czasu gry na wygenerowany obraz"""
+        time_str = f"Time: {int(self.stats.game_time)}s"
+        self.timer_image = self.font.render(
+            time_str, True, self.text_color, self.settings.bg_color)
+
+        # Wyświetlenie czasu po lewej stronie ekranu przy górnej krawędzi
+        self.timer_rect = self.timer_image.get_rect()
+        self.timer_rect.left = self.screen_rect.left + 20
+        self.timer_rect.top = self.screen_rect.top + 60
+
     def check_high_score(self):
         """Sprawdzenie, czy mamy najlepszy wynik osiągnięty dotąd w grze"""
         if self.stats.score > self.stats.high_score:

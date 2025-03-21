@@ -1,13 +1,14 @@
 import sys
 from time import sleep
 import pygame
+import random  # Dodaj na początku pliku
 from settings import Settings
 from game_stats import GameStats
 from scoreboard import Scoreboard
 from button import Button
 from ship import Ship
 from bullet import Bullet
-from alien import Alien
+from alien import Alien, ToughAlien
 
 
 class AlienInvasion:
@@ -42,6 +43,8 @@ class AlienInvasion:
 
         # Utworzenie przycisku Gra
         self.play_button = Button(self, "Graj")
+        self.firing_bullet = False  # Dodaj tę linię
+        self.tough_aliens_count = 0  # Dodaj licznik ToughAlien
 
     def run_game(self):
         """Rozpoczęcie pętli głównej gry"""
@@ -52,6 +55,8 @@ class AlienInvasion:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
+                if self.firing_bullet:  # Dodaj sprawdzenie flagi
+                    self._fire_bullet()
 
             self._update_screen()
 
@@ -105,7 +110,7 @@ class AlienInvasion:
         elif event.key == pygame.K_q:
             sys.exit()
         elif event.key == pygame.K_SPACE:
-            self._fire_bullet()
+            self.firing_bullet = True  # Zmień tę linię
         elif event.key == pygame.K_g:
             self._start_game()
 
@@ -115,6 +120,8 @@ class AlienInvasion:
             self.ship.moving_right = False
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = False
+        elif event.key == pygame.K_SPACE:  # Dodaj obsługę spacji
+            self.firing_bullet = False
 
     def _fire_bullet(self):
         """Utworzenie nowego pocisku i dodanie go do grupy pocisków"""
@@ -139,16 +146,22 @@ class AlienInvasion:
     def _check_bullet_alien_colision(self):
         """Reakcja na kolizję między pociskiem i obcym"""
         # Sprawdzenie czy którykolwiek pocisk trafił któregokolwiek obcego
-        # Jeżeli tak usuwamy zarówno pocisk jak i obcego
-        collision = pygame.sprite.groupcollide(
-            self.bullets, self.aliens, True, True)
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, True, False)
 
-        if collision:
-            for alien in collision.values():
-                self.stats.score += self.settings.alien_points * len(alien)
+        if collisions:
+            for alien_list in collisions.values():
+                for alien in alien_list:
+                    if isinstance(alien, ToughAlien):
+                        if alien.hit():
+                            self.aliens.remove(alien)
+                            self.stats.score += alien.points
+                    else:
+                        self.aliens.remove(alien)
+                        self.stats.score += alien.points
             self.sb.prep_score()
             self.sb.check_high_score()
-            
+
         # Po zastrzeleniu wszystkich obcych,
         # usunięcie pozostałych pocisków i utworzenie nowej floty
         # i przyspieszenie gry
@@ -193,14 +206,25 @@ class AlienInvasion:
                              3 * alien_hight - ship_height)
         number_rows = available_space_y // (2 * alien_hight)
 
+        # Resetuj licznik ToughAlien
+        self.tough_aliens_count = 0
+
         # Utworzenie pełnej floty obcych
         for row_number in range(number_rows):
             for alien_number in range(number_aliens_x):
                 self._create_alien(alien_number, row_number)
 
-    def _create_alien(self, alien_number, row_number):
-        # Utworzenie obcego i umieszczenie go w rzędzie
-        alien = Alien(self)
+    def _create_alien(self, alien_number, row_number, tough=None):
+        """Utworzenie obcego i umieszczenie go w rzędzie"""
+        # Losowo dodaj ToughAlien, ale nie więcej niż 5
+        if tough is None:
+            tough = (random.random() < 0.1 and self.tough_aliens_count < 5)
+
+        if tough:
+            alien = ToughAlien(self)
+            self.tough_aliens_count += 1
+        else:
+            alien = Alien(self)
         alien_width, alien_height = alien.rect.size
         alien.x = alien_width + 2 * alien_width * alien_number
         alien.rect.x = alien.x
@@ -215,7 +239,7 @@ class AlienInvasion:
                 break
 
     def _change_fleet_direction(self):
-        """Przesunięcie całej floty w dół i zmiana kiernku w którym się 
+        """Przesunięcie całej floty w dół i zmiana kiernku w którym się
         ona porusza"""
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
